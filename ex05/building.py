@@ -1,15 +1,9 @@
 import sys
-
-
-def ispunctuation(char: str) -> bool:
-    # check if a character is a punctuation mark
-    if char in '''!()-[]{};:'"\\,<>./?@#$%^&*_~''':
-        return True
-    return False
+import string
 
 
 def countChars(text: str) -> dict:
-    # count types of characters in a string
+    """ count types of characters in a string """
     details = {
         "upper": 0,
         "lower": 0,
@@ -22,7 +16,7 @@ def countChars(text: str) -> dict:
             details["upper"] += 1
         elif char.islower():
             details["lower"] += 1
-        elif ispunctuation(char):
+        elif char in string.punctuation:
             details["punctuation"] += 1
         elif char.isdigit():
             details["digits"] += 1
