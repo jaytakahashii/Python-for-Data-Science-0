@@ -3,28 +3,22 @@ from typing import Generator, Iterable
 import time
 import shutil
 
-# Fixed width estimation for components of the progress bar display.
+# Fixed width estimation for components of the status text.
 WIDTH_PERCENT = 4          # e.g., "100%"
 WIDTH_BRACKETS = 3         # e.g., "|[ ]|"
-WIDTH_COUNTERS_MAX = 12    # e.g., " 100000/100000"
-WIDTH_TIME_INFO = 30       # e.g., " [00:00<00:00, 100.00it/s]"
+# e.g., " [00:00<00:00, 100.00it/s]" (Constant length)
+WIDTH_TIME_INFO = 30
+WIDTH_SPACING = 1          # Space before the counter
 
 # The minimal length the bar is allowed to be.
 MIN_BAR_LENGTH = 10
-
-# Minimal required terminal width to display ALL information (including time).
-MIN_FULL_WIDTH = WIDTH_PERCENT + WIDTH_BRACKETS + \
-    WIDTH_COUNTERS_MAX + WIDTH_TIME_INFO + MIN_BAR_LENGTH
-# Minimal required terminal width to display basic information (excluding time).
-MIN_BASIC_WIDTH = WIDTH_PERCENT + WIDTH_BRACKETS + \
-    WIDTH_COUNTERS_MAX + MIN_BAR_LENGTH
 
 
 def ft_tqdm(lst: Iterable) -> Generator:
     """
     A simple implementation of a TQDM-like progress bar generator.
-    It dynamically adjusts the bar length and truncates time information
-    to prevent wrapping on narrow terminals, and ensures clean line updates.
+    It maximizes the use of the terminal width for the progress bar
+    while ensuring clean line updates and responsive display.
 
     Args:
         lst (Iterable): The iterable object to track (must support len()).
@@ -51,24 +45,30 @@ def ft_tqdm(lst: Iterable) -> Generator:
     start_time = time.time()
     count = 0
 
+    # Calculate the maximum width of the counter (e.g., " 1000/1000")
+    # This must be calculated dynamically based on 'total' to ensure full width utilization.
+    counter_max_width = len(f"{total}/{total}") + WIDTH_SPACING
+
     # Determine if we have enough space for the full (time-inclusive) display
+    MIN_FULL_WIDTH = WIDTH_PERCENT + WIDTH_BRACKETS + \
+        counter_max_width + WIDTH_TIME_INFO + MIN_BAR_LENGTH
+
     use_full_display = columns >= MIN_FULL_WIDTH
 
     if use_full_display:
-        # Calculate BAR_LENGTH with the full fixed width
+        # Full display: use the rest of the space for the bar
         fixed_width_total = WIDTH_PERCENT + WIDTH_BRACKETS + \
-            WIDTH_COUNTERS_MAX + WIDTH_TIME_INFO
+            counter_max_width + WIDTH_TIME_INFO
         BAR_LENGTH = max(MIN_BAR_LENGTH, columns - fixed_width_total)
     else:
-        # Calculate BAR_LENGTH with the minimal fixed width
-        fixed_width_basic = WIDTH_PERCENT + WIDTH_BRACKETS + WIDTH_COUNTERS_MAX
+        # Basic display (no time info): use the rest of the space for the bar
+        fixed_width_basic = WIDTH_PERCENT + WIDTH_BRACKETS + counter_max_width
         BAR_LENGTH = max(MIN_BAR_LENGTH, columns - fixed_width_basic)
 
-        # In extremely narrow cases, ensure BAR_LENGTH is at least 1
+        # Fallback for extremely narrow terminals (ensure BAR_LENGTH >= 1)
         if BAR_LENGTH < 1:
-            minimal_counter_width = len(f"{total}/{total}") + 1
             remaining_space = columns - \
-                (WIDTH_PERCENT + WIDTH_BRACKETS + minimal_counter_width)
+                (WIDTH_PERCENT + WIDTH_BRACKETS + counter_max_width)
             BAR_LENGTH = max(1, remaining_space)
 
     # ----------------------------------------------
@@ -87,8 +87,7 @@ def ft_tqdm(lst: Iterable) -> Generator:
         Pads the output string with spaces up to the terminal width (columns)
         to clear the rest of the line, preventing display artifacts.
         """
-        # Calculate padding needed to clear the entire line based on the terminal width
-        # The result must not be less than 0.
+        # Calculate padding needed to clear the entire line
         padding_needed = max(0, columns - len(output_str))
 
         # Write carriage return, the output string, and the padding
@@ -101,8 +100,15 @@ def ft_tqdm(lst: Iterable) -> Generator:
         sys.stdout.flush()
 
     # Initial display (0%)
-    # Use 0.0001 for elapsed time to avoid division by zero if total is small
-    _write_line(f"  0%|[{' ' * BAR_LENGTH}]| 0/{total}", new_line=False)
+    # Use spaces for the bar and ensure time info is included if using full display
+    initial_time_info = f" [{_format_time(0)}<{_format_time(0)}, 0.00it/s]" if use_full_display else ""
+    initial_output = (
+        f"  0%"
+        f"|[{' ' * BAR_LENGTH}]|"
+        f" 0/{total}"
+        f"{initial_time_info}"
+    )
+    _write_line(initial_output, new_line=False)
 
     # ----------------------------------------------
     # 3. Main iteration loop
@@ -110,7 +116,8 @@ def ft_tqdm(lst: Iterable) -> Generator:
 
     for item in lst:
         count += 1
-        elapsed_time = time.time() - start_time
+        current_time = time.time()
+        elapsed_time = current_time - start_time
 
         # Set a small minimum time to prevent division by zero for speed calculation
         if elapsed_time < 0.001:
