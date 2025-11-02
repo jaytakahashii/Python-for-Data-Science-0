@@ -1,20 +1,19 @@
 import sys
-from typing import Generator, Iterable
+from typing import Generator
 import time
 import shutil
 
 # Fixed width estimation for components of the status text.
-WIDTH_PERCENT = 4          # e.g., "100%"
-WIDTH_BRACKETS = 3         # e.g., "|[ ]|"
-# e.g., " [00:00<00:00, 100.00it/s]" (Constant length)
-WIDTH_TIME_INFO = 30
-WIDTH_SPACING = 1          # Space before the counter
+WIDTH_PERCENT = 4       # e.g., "100%"
+WIDTH_BRACKETS = 4      # e.g., "|[]|"
+WIDTH_TIME_INFO = 26    # e.g., " [00:00<00:00, 100.00it/s]"
+WIDTH_SPACING = 1       # Space before the counter
 
 # The minimal length the bar is allowed to be.
-MIN_BAR_LENGTH = 10
+MIN_BAR_LENGTH = 5      # e.g., "[====>]"
 
 
-def ft_tqdm(lst: Iterable) -> Generator:
+def ft_tqdm(lst: range) -> Generator:
     """
     A simple implementation of a TQDM-like progress bar generator.
     It maximizes the use of the terminal width for the progress bar
@@ -39,15 +38,14 @@ def ft_tqdm(lst: Iterable) -> Generator:
     try:
         total = len(lst)
     except TypeError:
-        print("Error: ft_tqdm requires a sized iterable (like range, list, tuple).", file=sys.stderr)
+        print("ft_tqdm only supports iterables with a known length.")
         return
 
     start_time = time.time()
     count = 0
 
     # Calculate the maximum width of the counter (e.g., " 1000/1000")
-    # This must be calculated dynamically based on 'total' to ensure full width utilization.
-    counter_max_width = len(f"{total}/{total}") + WIDTH_SPACING
+    counter_max_width = WIDTH_SPACING + len(f"{total}/{total}")
 
     # Determine if we have enough space for the full (time-inclusive) display
     MIN_FULL_WIDTH = WIDTH_PERCENT + WIDTH_BRACKETS + \
@@ -64,12 +62,6 @@ def ft_tqdm(lst: Iterable) -> Generator:
         # Basic display (no time info): use the rest of the space for the bar
         fixed_width_basic = WIDTH_PERCENT + WIDTH_BRACKETS + counter_max_width
         BAR_LENGTH = max(MIN_BAR_LENGTH, columns - fixed_width_basic)
-
-        # Fallback for extremely narrow terminals (ensure BAR_LENGTH >= 1)
-        if BAR_LENGTH < 1:
-            remaining_space = columns - \
-                (WIDTH_PERCENT + WIDTH_BRACKETS + counter_max_width)
-            BAR_LENGTH = max(1, remaining_space)
 
     # ----------------------------------------------
     # 2. Time formatting and line writing helpers
@@ -100,8 +92,11 @@ def ft_tqdm(lst: Iterable) -> Generator:
         sys.stdout.flush()
 
     # Initial display (0%)
-    # Use spaces for the bar and ensure time info is included if using full display
-    initial_time_info = f" [{_format_time(0)}<{_format_time(0)}, 0.00it/s]" if use_full_display else ""
+    if use_full_display:
+        initial_time_info = f" [{_format_time(0)}<{_format_time(0)}, 0.00it/s]"
+    else:
+        initial_time_info = ""
+
     initial_output = (
         f"  0%"
         f"|[{' ' * BAR_LENGTH}]|"
@@ -119,7 +114,6 @@ def ft_tqdm(lst: Iterable) -> Generator:
         current_time = time.time()
         elapsed_time = current_time - start_time
 
-        # Set a small minimum time to prevent division by zero for speed calculation
         if elapsed_time < 0.001:
             elapsed_time = 0.001
 
@@ -145,11 +139,14 @@ def ft_tqdm(lst: Iterable) -> Generator:
             else:
                 eta_formatted = "??:??"
 
-            time_info_str = f" [{elapsed_formatted}<{eta_formatted}, {it_per_sec:.2f}it/s]"
+            time_info_str = (
+                f" [{elapsed_formatted}<{eta_formatted}"
+                f", {it_per_sec:5.2f}it/s]"
+            )
 
         # Construct the final output string
         output = (
-            f"{int(percent * 100):3d}%"  # Percentage padded to 3 characters
+            f"{int(percent * 100):3d}%"
             f"|[{bar}]|"
             f" {count}/{total}"
             f"{time_info_str}"
@@ -182,7 +179,10 @@ def ft_tqdm(lst: Iterable) -> Generator:
         final_elapsed_formatted = _format_time(final_elapsed_time)
 
         # Final output always shows ETA as 00:00
-        final_time_info_str = f" [{final_elapsed_formatted}<00:00, {final_it_per_sec:.2f}it/s]"
+        final_time_info_str = (
+            f" [{final_elapsed_formatted}<00:00"
+            f", {final_it_per_sec:5.2f}it/s]"
+        )
 
     # Final output string
     final_output = (
