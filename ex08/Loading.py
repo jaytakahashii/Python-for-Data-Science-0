@@ -1,33 +1,31 @@
 import sys
-from typing import Generator
 import time
 import shutil
 
-# Fixed width estimation for components of the status text.
-WIDTH_PERCENT = 4       # e.g., "100%"
-WIDTH_BRACKETS = 4      # e.g., "|[]|"
-WIDTH_TIME_INFO = 26    # e.g., " [00:00<00:00, 100.00it/s]"
-WIDTH_SPACING = 1       # Space before the counter
 
-# The minimal length the bar is allowed to be.
-MIN_BAR_LENGTH = 5      # e.g., "[====>]"
-
-
-def ft_tqdm(lst: range) -> Generator:
+def ft_tqdm(lst: range) -> None:
     """
     A simple implementation of a TQDM-like progress bar generator.
     It maximizes the use of the terminal width for the progress bar
     while ensuring clean line updates and responsive display.
 
     Args:
-        lst (Iterable): The iterable object to track (must support len()).
+        lst (range): An iterable with a known length.
 
     Yields:
         The current item from the iterable.
+
+    Returns:
+        None
     """
     # ----------------------------------------------
     # 1. Initial setup and width calculation
     # ----------------------------------------------
+    WIDTH_PERCENT = 4       # e.g., "100%"
+    WIDTH_BRACKETS = 4      # e.g., "|[]|"
+    WIDTH_TIME_INFO = 26    # e.g., " [00:00<00:00, 100.00it/s]"
+    WIDTH_SPACING = 1       # Space before the counter
+    MIN_BAR_LENGTH = 5      # e.g., "[====>]"
 
     try:
         # Get terminal width or fallback to 80
@@ -38,7 +36,7 @@ def ft_tqdm(lst: range) -> Generator:
     try:
         total = len(lst)
     except TypeError:
-        print("ft_tqdm only supports iterables with a known length.")
+        print("ft_tqdm requires an iterable with a known length.")
         return
 
     start_time = time.time()
@@ -74,21 +72,11 @@ def ft_tqdm(lst: range) -> Generator:
         m, s = divmod(int(seconds), 60)
         return f"{m:02}:{s:02}"
 
-    def _write_line(output_str: str, new_line: bool = False):
+    def _write_line(output_str: str):
         """
-        Pads the output string with spaces up to the terminal width (columns)
-        to clear the rest of the line, preventing display artifacts.
+        Writes the output string to stdout, clearing any previous content.
         """
-        # Calculate padding needed to clear the entire line
-        padding_needed = max(0, columns - len(output_str))
-
-        # Write carriage return, the output string, and the padding
-        sys.stdout.write('\r' + output_str + (' ' * padding_needed))
-
-        # Add a newline only if requested (for finalization)
-        if new_line:
-            sys.stdout.write('\n')
-
+        sys.stdout.write('\r' + output_str)
         sys.stdout.flush()
 
     # Initial display (0%)
@@ -103,7 +91,7 @@ def ft_tqdm(lst: range) -> Generator:
         f" 0/{total}"
         f"{initial_time_info}"
     )
-    _write_line(initial_output, new_line=False)
+    _write_line(initial_output)
 
     # ----------------------------------------------
     # 3. Main iteration loop
@@ -153,7 +141,7 @@ def ft_tqdm(lst: range) -> Generator:
         )
 
         # Write the line, clearing any previous remnants
-        _write_line(output, new_line=False)
+        _write_line(output)
 
         # Yield the element to the user's code
         yield item
@@ -193,4 +181,4 @@ def ft_tqdm(lst: range) -> Generator:
     )
 
     # Write the final 100% line and add a newline to complete the display
-    _write_line(final_output, new_line=True)
+    _write_line(final_output)
