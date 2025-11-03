@@ -1,0 +1,30 @@
+# ex09/pyproject.toml
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61.0.0"]
+
+[project]
+authors = [
+  {name = "eagle", email = "eagle@42.fr"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+description = "A sample test package"
+keywords = ["42", "package", "sample"]
+license = {file = "LICENSE"}
+name = "ft_package"
+readme = "README.md"
+requires-python = ">=3.8"
+version = "0.0.1"
+
+[project.urls]
+"Homepage" = "https://github.com/eagle/ft_package" # 課題の出力に合わせる
+
+# ここに依存関係を記述できますが、この課題では必要ありません
+# dependencies = [
+#     "some_dependency",
+# ]
