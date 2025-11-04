@@ -1,13 +1,16 @@
 import sys
 
 
-def morse_encode(text):
+def morse_encode(text) -> str:
     """
     Encodes a string into Morse Code using a dictionary.
 
-    :param text: The string to encode.
-    :return: The Morse Code string.
-    :raises AssertionError: If the text contains unsupported characters.
+    Argus:
+        text (str): The input string to be encoded.
+    Returns:
+        str: The encoded Morse Code string.
+    Raises:
+        AssertionError: If the input contains unsupported characters.
     """
     MORSE_CODE = {
         " ": "/ ",
@@ -71,6 +74,9 @@ def morse_encode(text):
 
 
 def main():
+    """
+    Main function to encode input string to Morse Code.
+    """
     try:
         assert len(sys.argv) == 2, "the arguments are bad"
 
