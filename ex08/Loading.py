@@ -18,9 +18,7 @@ def ft_tqdm(lst: range) -> None:
     Returns:
         None
     """
-    # ----------------------------------------------
     # 1. Initial setup and width calculation
-    # ----------------------------------------------
     WIDTH_PERCENT = 4       # e.g., "100%"
     WIDTH_BRACKETS = 4      # e.g., "|[]|"
     WIDTH_TIME_INFO = 26    # e.g., " [00:00<00:00, 100.00it/s]"
@@ -28,17 +26,12 @@ def ft_tqdm(lst: range) -> None:
     MIN_BAR_LENGTH = 5      # e.g., "[====>]"
 
     try:
-        # Get terminal width or fallback to 80
+        # Get terminal width
         columns = shutil.get_terminal_size().columns
     except Exception:
-        columns = 80  # Default to 80 if not TTY
+        columns = 80
 
-    try:
-        total = len(lst)
-    except TypeError:
-        print("ft_tqdm requires an iterable with a known length.")
-        return
-
+    total = len(lst)
     start_time = time.time()
     count = 0
 
@@ -61,12 +54,11 @@ def ft_tqdm(lst: range) -> None:
         fixed_width_basic = WIDTH_PERCENT + WIDTH_BRACKETS + counter_max_width
         BAR_LENGTH = max(MIN_BAR_LENGTH, columns - fixed_width_basic)
 
-    # ----------------------------------------------
     # 2. Time formatting and line writing helpers
-    # ----------------------------------------------
-
     def _format_time(seconds: float) -> str:
-        """Formats time in seconds into MM:SS string."""
+        """
+        Formats time in seconds into MM:SS string.
+        """
         if seconds < 0:
             return "??:??"
         m, s = divmod(int(seconds), 60)
@@ -93,10 +85,7 @@ def ft_tqdm(lst: range) -> None:
     )
     _write_line(initial_output)
 
-    # ----------------------------------------------
     # 3. Main iteration loop
-    # ----------------------------------------------
-
     for item in lst:
         count += 1
         current_time = time.time()
@@ -140,16 +129,12 @@ def ft_tqdm(lst: range) -> None:
             f"{time_info_str}"
         )
 
-        # Write the line, clearing any previous remnants
         _write_line(output)
 
         # Yield the element to the user's code
         yield item
 
-    # ----------------------------------------------
     # 4. Finalization (100% display)
-    # ----------------------------------------------
-
     final_time = time.time()
     final_elapsed_time = final_time - start_time
 
