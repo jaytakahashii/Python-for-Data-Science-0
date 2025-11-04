@@ -6,25 +6,20 @@ SCRIPT_PATH = "filterstring.py"
 PYTHON_EXECUTABLE = sys.executable
 
 test_cases = [
-    # (arguments list, expected output)
     (['Hello the World', '4'], "['Hello', 'World']\n"),
     (['Hello the World', '99'], "[]\n"),
 ]
 
 error_cases = [
-    (['3', 'Hello the World']),  # Non-integer argument
-    ([]),                       # No arguments
+    (['3', 'Hello the World']),
+    ([]),
 ]
 
 
 @pytest.mark.parametrize("args, expected_output", test_cases)
 def test_normal_output(args, expected_output):
-    """
-    test normal output of the filterstring CLI program.
-    """
     command = [PYTHON_EXECUTABLE, SCRIPT_PATH] + args
 
-    # run the program using subprocess.run
     result = subprocess.run(
         command, capture_output=True, text=True, check=False)
 
@@ -41,9 +36,6 @@ def test_normal_output(args, expected_output):
 
 @pytest.mark.parametrize("args", error_cases)
 def test_error_handling(args):
-    """
-    test error handling of the filterstring CLI program.
-    """
     command = [PYTHON_EXECUTABLE, SCRIPT_PATH] + args
     expected_error_message = "AssertionError: the arguments are bad"
 
@@ -55,6 +47,7 @@ def test_error_handling(args):
         f"Process should have failed but exited with return code 0. \
             Stdout: {result.stdout}"
 
+    # check that the expected error message is in stderr or stdout
     full_output = result.stdout + result.stderr
     assert expected_error_message in full_output, \
         f"Missing error message. Output: {full_output}"
