@@ -3,11 +3,21 @@ from ft_filter import ft_filter
 
 
 def long_enough(word: str, n: int) -> bool:
-    """Checks if a word's length is at least n."""
+    """
+    Check if the length of the word is greater than n.
+
+    Args:
+        word (str): The word to check.
+        n (int): The length threshold.
+    Returns:
+        bool: True if the length of the word is greater than n,
+              False otherwise.
+    """
     return len(word) > n
 
 
-if __name__ == "__main__":
+def main():
+    """ Main function to filter words based on length. """
     if len(sys.argv) != 3:
         raise SystemExit("AssertionError: the arguments are bad")
 
@@ -22,3 +32,7 @@ if __name__ == "__main__":
     words = S.split(" ")
     filtered_words = ft_filter(lambda word: long_enough(word, N), words)
     print(filtered_words)
+
+
+if __name__ == "__main__":
+    main()
