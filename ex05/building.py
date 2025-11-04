@@ -3,7 +3,15 @@ import string
 
 
 def countChars(text: str) -> dict:
-    """ count types of characters in a string """
+    """
+    Count the number of uppercase letters, lowercase letters,
+    punctuation marks, spaces, and digits in the given text.
+
+    Args:
+        text (str): The input text to analyze.
+    Returns:
+        dict: A dictionary with counts of each character type.
+    """
     details = {
         "upper": 0,
         "lower": 0,
@@ -26,6 +34,9 @@ def countChars(text: str) -> dict:
 
 
 def main():
+    """
+    Main function to handle input and output.
+    """
     try:
         if len(sys.argv) > 2:
             raise AssertionError("more than one argument is provided")
